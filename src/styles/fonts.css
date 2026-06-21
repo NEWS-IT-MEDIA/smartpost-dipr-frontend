@@ -1,0 +1,89 @@
+/*
+ * Self-hosted fonts for the DIPR Communications Platform.
+ *
+ * Why self-hosted (not a Google Fonts <link>): this is a government intranet
+ * tool that must work on restricted networks and load deterministically.
+ * Drop the woff2 files into /public/fonts/ (paths below). Until they are
+ * present, the local()/system fallbacks keep the UI fully legible.
+ *
+ * Required files (download once, commit to /public/fonts/):
+ *   Geist:        geist-400/500/600/700.woff2   (https://github.com/vercel/geist-font)
+ *   Geist Mono:   geist-mono-400/500.woff2
+ *   Noto Tamil:   noto-sans-tamil-400/500/600/700.woff2  (Google Fonts download)
+ */
+
+/* ── Geist (UI sans) ───────────────────────────────────────────────────── */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local("Geist Regular"), url("/fonts/geist-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local("Geist Medium"), url("/fonts/geist-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local("Geist SemiBold"), url("/fonts/geist-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local("Geist Bold"), url("/fonts/geist-700.woff2") format("woff2");
+}
+
+/* ── Geist Mono (numbers, IDs, timestamps) ─────────────────────────────── */
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local("Geist Mono Regular"), url("/fonts/geist-mono-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local("Geist Mono Medium"), url("/fonts/geist-mono-500.woff2") format("woff2");
+}
+
+/* ── Noto Sans Tamil (Tamil script) ────────────────────────────────────── */
+@font-face {
+  font-family: "Noto Sans Tamil";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local("Noto Sans Tamil"), url("/fonts/noto-sans-tamil-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Noto Sans Tamil";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local("Noto Sans Tamil Medium"), url("/fonts/noto-sans-tamil-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Noto Sans Tamil";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local("Noto Sans Tamil SemiBold"), url("/fonts/noto-sans-tamil-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Noto Sans Tamil";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local("Noto Sans Tamil Bold"), url("/fonts/noto-sans-tamil-700.woff2") format("woff2");
+}
