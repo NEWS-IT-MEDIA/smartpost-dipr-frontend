@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import { cn } from "../components/ui/utils";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { createDraft, aiRefineCard, submitCard } from "../api/endpoints";
-import type { AIRefineResponse } from "../api/types";
+import { createDraft, aiRefineCard, designCard, submitCard } from "../api/endpoints";
+import type { AIRefineResponse, DesignResponse } from "../api/types";
 import type { Lang } from "../lib/i18n";
 
 const STEPS = ["Input", "AI Refine", "Design", "Review", "Publish"];
@@ -34,6 +34,13 @@ const PLATFORM_SIZES = [
 ];
 
 const TEMPLATES = ["Scheme Launch", "Statistics", "Quote Card", "Event", "Alert"];
+const TEMPLATE_API_ID: Record<string, string> = {
+  "Scheme Launch": "scheme_launch",
+  "Statistics": "statistics",
+  "Quote Card": "quote",
+  "Event": "event",
+  "Alert": "alert",
+};
 const TONALITIES = ["Formal", "Announcement", "Achievement", "Welfare-Scheme", "Condolence", "Alert"];
 const TONALITY_TA: Record<string, string> = {
   Formal: "முறையான", Announcement: "அறிவிப்பு", Achievement: "சாதனை",
@@ -44,6 +51,7 @@ export function CreateCard({ lang }: { lang: Lang }) {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [refining, setRefining] = useState(false);
+  const [designing, setDesigning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -59,6 +67,7 @@ export function CreateCard({ lang }: { lang: Lang }) {
   // Card ID created after first draft save
   const cardIdRef = useRef<string | null>(null);
   const [aiResult, setAiResult] = useState<AIRefineResponse | null>(null);
+  const [designResult, setDesignResult] = useState<DesignResponse | null>(null);
 
   // Step 3–5 state (kept as-is from design phase)
   const [platSize, setPlatSize] = useState("FB");
@@ -117,6 +126,26 @@ export function CreateCard({ lang }: { lang: Lang }) {
     }
   }
 
+  async function handleDesign() {
+    if (!cardIdRef.current) return;
+    setDesigning(true);
+    setError("");
+    try {
+      const result = await designCard(cardIdRef.current, {
+        template_id: TEMPLATE_API_ID[template] ?? "scheme_launch",
+        generate_images: true,
+      });
+      setDesignResult(result);
+    } catch (e: unknown) {
+      // Non-fatal: image generation may fail if Supabase Storage isn't set up yet.
+      // We still let the user proceed — card was saved, images just won't be generated.
+      setError(e instanceof Error ? e.message : "Image generation failed — you can still proceed");
+    } finally {
+      setDesigning(false);
+    }
+    setStep(4);
+  }
+
   async function handleSubmit() {
     if (!cardIdRef.current) return;
     setSubmitting(true);
@@ -126,6 +155,7 @@ export function CreateCard({ lang }: { lang: Lang }) {
       // Reset wizard on success
       cardIdRef.current = null;
       setAiResult(null);
+      setDesignResult(null);
       setTitleTa(""); setTitleEn(""); setBodyTa(""); setGoRef(""); setEventDate(""); setLocation("");
       setStep(1);
     } catch (e: unknown) {
@@ -454,7 +484,25 @@ export function CreateCard({ lang }: { lang: Lang }) {
             </div>
 
             <div className="lg:col-span-3">
-              <StepNav lang={lang} onBack={() => setStep(2)} onNext={() => setStep(4)} nextLabel={lang === "ta" ? "மறுஆய்வு" : "Review"} />
+              {error && (
+                <div className="mb-3 flex items-center gap-2 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                  <AlertTriangle size={12} aria-hidden="true" /> {error}
+                </div>
+              )}
+              <div className="flex justify-between pt-2">
+                <button onClick={() => setStep(2)} className="rounded border border-border px-3 py-2 text-xs transition-colors hover:bg-muted active:scale-[0.98]">
+                  {lang === "ta" ? "பின்" : "Back"}
+                </button>
+                <button
+                  onClick={handleDesign}
+                  disabled={designing || !cardIdRef.current}
+                  className="flex items-center gap-2 rounded bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 active:scale-[0.98]"
+                >
+                  {designing
+                    ? <><Loader2 size={13} className="animate-spin" aria-hidden="true" /> {lang === "ta" ? "உருவாக்குகிறது…" : "Generating cards…"}</>
+                    : <>{lang === "ta" ? "மறுஆய்வு" : "Generate & Review"} <ArrowRight size={13} aria-hidden="true" /></>}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -463,18 +511,46 @@ export function CreateCard({ lang }: { lang: Lang }) {
         {step === 4 && (
           <div className="max-w-4xl space-y-5">
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-foreground">{lang === "ta" ? "அனைத்து தள அட்டைகள்" : "All Platform Cards"}</h3>
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-foreground">{lang === "ta" ? "அனைத்து தள அட்டைகள்" : "All Platform Cards"}</h3>
+                {designResult && (
+                  <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 size={11} aria-hidden="true" />
+                    {lang === "ta" ? "அட்டைகள் உருவாக்கப்பட்டன" : "Cards generated"}
+                    {designResult.generationTimeMs ? ` · ${(designResult.generationTimeMs / 1000).toFixed(1)}s` : ""}
+                  </span>
+                )}
+              </div>
+              {designResult?.generationErrors && designResult.generationErrors.length > 0 && (
+                <div className="mb-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                  {lang === "ta" ? "சில தளங்களில் பிழை:" : "Some platforms had errors:"} {designResult.generationErrors.join("; ")}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {PLATFORM_SIZES.slice(0, 6).map((p) => (
-                  <div key={p.key} className="overflow-hidden rounded border border-border bg-card">
-                    <div className="relative" style={{ aspectRatio: p.ratio }}>
-                      <ImageWithFallback src={`https://picsum.photos/seed/dipr-rev-${p.key}/480/270`} alt={`${p.label} card preview`} className="absolute inset-0 h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0f1a35]/85 to-transparent" />
-                      <div className="absolute bottom-1.5 left-2 text-[10px] font-bold text-white line-clamp-1">{titleEn || titleTa || "Card"}</div>
+                {PLATFORM_SIZES.slice(0, 6).map((p) => {
+                  const generatedUrl = designResult?.platformCardUrls?.[`${p.key}_ta`]
+                    ?? designResult?.platformCardUrls?.[`${p.key}_en`]
+                    ?? designResult?.platformCardUrls?.[p.key];
+                  const imgSrc = generatedUrl ?? `https://picsum.photos/seed/dipr-rev-${p.key}/480/270`;
+                  const isGenerated = !!generatedUrl;
+                  return (
+                    <div key={p.key} className="overflow-hidden rounded border border-border bg-card">
+                      <div className="relative" style={{ aspectRatio: p.ratio }}>
+                        <ImageWithFallback src={imgSrc} alt={`${p.label} card preview`} className="absolute inset-0 h-full w-full object-cover" />
+                        {!isGenerated && (
+                          <>
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0f1a35]/85 to-transparent" />
+                            <div className="absolute bottom-1.5 left-2 text-[10px] font-bold text-white line-clamp-1">{titleEn || titleTa || "Card"}</div>
+                          </>
+                        )}
+                        {isGenerated && (
+                          <span className="absolute right-1.5 top-1.5 rounded bg-emerald-600/90 px-1.5 py-0.5 text-[9px] font-bold text-white">LIVE</span>
+                        )}
+                      </div>
+                      <div className="px-2 py-1 font-mono text-[9px] text-muted-foreground">{p.label} · {p.size}</div>
                     </div>
-                    <div className="px-2 py-1 font-mono text-[9px] text-muted-foreground">{p.label} · {p.size}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

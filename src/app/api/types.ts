@@ -171,6 +171,26 @@ export type AIRefineResponse = {
   processing_time_ms: number;
 };
 
+// ─── Design — SaveDesignRequest is plain BaseModel (snake_case body) ──────────
+export type SaveDesignBody = {
+  template_id: string;
+  generate_images?: boolean;
+  platforms?: string[] | null;
+  photo_url?: string | null;
+  logo_url?: string | null;
+  platform_card_urls?: Record<string, string> | null;
+};
+
+// DesignResponse uses _CAMEL → camelCase response
+export type DesignResponse = {
+  cardId: string;
+  designTemplate: string;
+  platformCardUrls: Record<string, string>;
+  status: string;
+  generationTimeMs?: number | null;
+  generationErrors?: string[] | null;
+};
+
 // Request bodies (snake_case — these are plain BaseModel, no alias_generator)
 export type CreateDraftBody = {
   title_ta?: string;

@@ -4,6 +4,7 @@ import type {
   DiprStats, CardListResponse, CardListItem, CardDetail,
   CardDraftResponse, ApprovalActionResponse,
   CreateDraftBody, ApproveCardBody, AIRefineResponse,
+  SaveDesignBody, DesignResponse,
 } from "./types";
 
 /* Auth */
@@ -60,6 +61,10 @@ export function updateDraft(id: string, body: Partial<CreateDraftBody>) {
 
 export function aiRefineCard(id: string) {
   return apiRequest<AIRefineResponse>(`/cards/${id}/ai-refine`, { method: "POST" });
+}
+
+export function designCard(id: string, body: SaveDesignBody) {
+  return apiRequest<DesignResponse>(`/cards/${id}/design`, { method: "POST", body });
 }
 
 export function submitCard(id: string) {
