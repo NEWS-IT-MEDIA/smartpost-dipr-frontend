@@ -3,7 +3,7 @@ import type {
   SignInResponse, Post, NewsItem,
   DiprStats, CardListResponse, CardListItem, CardDetail,
   CardDraftResponse, ApprovalActionResponse,
-  CreateDraftBody, ApproveCardBody,
+  CreateDraftBody, ApproveCardBody, AIRefineResponse,
 } from "./types";
 
 /* Auth */
@@ -59,7 +59,7 @@ export function updateDraft(id: string, body: Partial<CreateDraftBody>) {
 }
 
 export function aiRefineCard(id: string) {
-  return apiRequest<CardDetail>(`/cards/${id}/ai-refine`, { method: "POST" });
+  return apiRequest<AIRefineResponse>(`/cards/${id}/ai-refine`, { method: "POST" });
 }
 
 export function submitCard(id: string) {

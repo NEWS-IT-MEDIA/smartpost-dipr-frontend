@@ -136,6 +136,41 @@ export type ApprovalActionResponse = {
   message: string;
 };
 
+// ─── AI Refine Response — snake_case (AIRefineResponse has no _CAMEL config) ──
+export type GroundingIndicator = {
+  sentence_index: number;
+  status: "green" | "amber";
+  reason: string;
+};
+
+export type ModerationFlag = {
+  type: string;
+  location: string;
+  suggestion: string;
+  severity: "low" | "medium" | "high";
+};
+
+export type RefinedContent = {
+  title: string;
+  body: string;
+  grounding_indicators: GroundingIndicator[];
+  moderation_flags: ModerationFlag[];
+};
+
+export type AIRefineResponse = {
+  card_version_id: string;
+  original: {
+    title_tamil: string;
+    title_english: string;
+    body_tamil: string;
+    body_english: string;
+  };
+  refined_tamil: RefinedContent;
+  refined_english: RefinedContent;
+  caption_variants: Array<{ id: number; text: string }>;
+  processing_time_ms: number;
+};
+
 // Request bodies (snake_case — these are plain BaseModel, no alias_generator)
 export type CreateDraftBody = {
   title_ta?: string;

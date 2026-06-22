@@ -18,7 +18,7 @@ import {
 import { cn } from "../components/ui/utils";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { createDraft, aiRefineCard, submitCard } from "../api/endpoints";
-import type { CardDetail } from "../api/types";
+import type { AIRefineResponse } from "../api/types";
 import type { Lang } from "../lib/i18n";
 
 const STEPS = ["Input", "AI Refine", "Design", "Review", "Publish"];
@@ -58,7 +58,7 @@ export function CreateCard({ lang }: { lang: Lang }) {
 
   // Card ID created after first draft save
   const cardIdRef = useRef<string | null>(null);
-  const [aiResult, setAiResult] = useState<CardDetail | null>(null);
+  const [aiResult, setAiResult] = useState<AIRefineResponse | null>(null);
 
   // Step 3–5 state (kept as-is from design phase)
   const [platSize, setPlatSize] = useState("FB");
@@ -324,13 +324,13 @@ export function CreateCard({ lang }: { lang: Lang }) {
                 },
                 {
                   label: lang === "ta" ? "AI சுத்தம் — தமிழ்" : "AI Refined — Tamil",
-                  content: aiResult?.aiRefinedTa ?? "(AI refinement pending…)",
+                  content: aiResult?.refined_tamil?.body ?? "(AI refinement pending…)",
                   l: "ta" as const,
                   grounded: [] as boolean[],
                 },
                 {
                   label: lang === "ta" ? "AI சுத்தம் — ஆங்கிலம்" : "AI Refined — English",
-                  content: aiResult?.aiRefinedEn ?? "(AI refinement pending…)",
+                  content: aiResult?.refined_english?.body ?? "(AI refinement pending…)",
                   l: "en" as const,
                   grounded: [] as boolean[],
                 },
@@ -343,13 +343,13 @@ export function CreateCard({ lang }: { lang: Lang }) {
             </div>
 
             {/* Caption variants */}
-            {aiResult?.captionVariants && aiResult.captionVariants.length > 0 && (
+            {aiResult?.caption_variants && aiResult.caption_variants.length > 0 && (
               <div className="rounded border border-border bg-card p-3">
                 <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {lang === "ta" ? "தலைப்பு மாறுபாடுகள்" : "Caption Variants"}
                 </div>
                 <div className="space-y-2">
-                  {aiResult.captionVariants.map((v) => (
+                  {aiResult.caption_variants.map((v) => (
                     <div key={v.id} className="rounded bg-muted/40 px-3 py-2 text-xs text-foreground">
                       <span className="mr-2 font-mono text-[10px] text-muted-foreground">V{v.id}</span>
                       {v.text}
@@ -360,13 +360,13 @@ export function CreateCard({ lang }: { lang: Lang }) {
             )}
 
             {/* Moderation flags */}
-            {aiResult?.moderationFlags && aiResult.moderationFlags.length > 0 && (
+            {aiResult?.refined_tamil?.moderation_flags && aiResult.refined_tamil.moderation_flags.length > 0 && (
               <div className="rounded border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40">
                 <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300">
                   <AlertTriangle size={13} aria-hidden="true" /> {lang === "ta" ? "மதிப்பீட்டு கொடிகள்" : "Moderation Flags"}
                 </div>
                 <div className="space-y-2">
-                  {aiResult.moderationFlags.map((flag, i) => (
+                  {aiResult.refined_tamil.moderation_flags.map((flag, i) => (
                     <div key={i} className="text-xs text-amber-800 dark:text-amber-300">
                       <span className="font-bold uppercase">{flag.type}</span>
                       <span className={cn("ml-2 rounded px-1 text-[9px]", flag.severity === "high" ? "bg-red-200 text-red-800" : "bg-amber-200 text-amber-800")}>{flag.severity}</span>
@@ -415,8 +415,8 @@ export function CreateCard({ lang }: { lang: Lang }) {
               {(() => {
                 const p = PLATFORM_SIZES.find((x) => x.key === platSize)!;
                 const displayTitle = cardLang === "ta"
-                  ? (aiResult?.aiRefinedTa ?? (titleTa || "Card Title"))
-                  : (aiResult?.aiRefinedEn ?? (titleEn || "Card Title"));
+                  ? (aiResult?.refined_tamil?.title ?? (titleTa || "Card Title"))
+                  : (aiResult?.refined_english?.title ?? (titleEn || "Card Title"));
                 return (
                   <div className="rounded border border-border bg-muted/40 p-4">
                     <div className="relative mx-auto overflow-hidden rounded shadow-sm" style={{ aspectRatio: p.ratio, maxWidth: 480, width: "100%" }}>
@@ -518,7 +518,7 @@ export function CreateCard({ lang }: { lang: Lang }) {
               <label className="mb-1.5 block text-xs font-semibold text-foreground">{lang === "ta" ? "தலைப்பு (Facebook)" : "Caption (Facebook)"}</label>
               <textarea
                 rows={3}
-                defaultValue={aiResult?.captionVariants?.[0]?.text ?? ""}
+                defaultValue={aiResult?.caption_variants?.[0]?.text ?? ""}
                 className="w-full resize-none rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
