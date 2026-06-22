@@ -79,9 +79,9 @@ async function tryRefresh(): Promise<boolean> {
     })
       .then(async (r) => {
         if (!r.ok) return false;
-        const data = (await parse(r)) as { access_token?: string } | null;
-        if (data?.access_token) {
-          tokenStore.setAccess(data.access_token);
+        const data = (await parse(r)) as { accessToken?: string } | null;
+        if (data?.accessToken) {
+          tokenStore.setAccess(data.accessToken);
           return true;
         }
         return false;

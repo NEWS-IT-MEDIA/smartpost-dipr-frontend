@@ -19,12 +19,20 @@ import { useAuth } from "./api/AuthContext";
 import type { Lang } from "./lib/i18n";
 
 export default function App() {
-  const { isAuthed, signOut } = useAuth();
+  const { isAuthed, loading, signOut } = useAuth();
   const [activeView, setActiveView] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
   const [lang, setLang] = useState<Lang>("en");
 
   const toggleLang = () => setLang((l) => (l === "en" ? "ta" : "en"));
+
+  if (loading) {
+    return (
+      <div className="flex h-dvh w-full items-center justify-center bg-background">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!isAuthed) {
     return <Login lang={lang} onLang={toggleLang} />;

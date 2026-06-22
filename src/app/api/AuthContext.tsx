@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const res = await apiSignIn(email, password);
-    tokenStore.set(res.access_token, res.refresh_token, res.user.tenant_id ?? undefined);
+    tokenStore.set(res.accessToken, res.refreshToken, res.user.tenantId ?? undefined);
     localStorage.setItem(STORAGE.user, JSON.stringify(res.user));
     setUser(res.user);
   };

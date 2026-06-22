@@ -1,30 +1,33 @@
-/* Types mirrored from the OmniPush OpenAPI contract (the shapes Stage 1 wires).
- * These are hand-mirrored for the endpoints used now; a fuller generated
- * client can replace this later. Field names match the live /openapi.json. */
+/* Types mirrored from the OmniPush OpenAPI contract.
+ * All fields are camelCase — the backend BaseResponse uses alias_generator=to_camel. */
 
 export type UserInfo = {
   id: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  tenant_id?: string | null;
+  firstName: string;
+  lastName: string;
+  tenantId?: string | null;
   role?: string | null;
+  roleDisplay?: string | null;
+  newsroomRole?: string | null;
+  district?: string | null;
+  department?: string | null;
 };
 
 export type SignInResponse = {
   timestamp: string;
-  request_id?: string | null;
+  requestId?: string | null;
   user: UserInfo;
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 };
 
 export type RefreshTokenResponse = {
   timestamp: string;
-  request_id?: string | null;
-  access_token: string;
-  expires_in: number;
+  requestId?: string | null;
+  accessToken: string;
+  expiresIn: number;
 };
 
 /** A published/draft post row from GET /v1/posts (subset used by the UI). */

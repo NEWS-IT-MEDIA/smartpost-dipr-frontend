@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Settings, User } from "lucide-react";
 import { cn } from "./ui/utils";
-import { navItems } from "./nav-items";
-import { currentUser } from "../data/mock";
+import { getVisibleNavItems } from "./nav-items";
+import { useAuth } from "../api/AuthContext";
 import type { Lang } from "../lib/i18n";
 
 export function Sidebar({
@@ -17,6 +17,24 @@ export function Sidebar({
   onToggle: () => void;
   lang: Lang;
 }) {
+  const { user } = useAuth();
+  const visibleItems = getVisibleNavItems(user?.role ?? undefined);
+  const isAdmin = user?.role === "admin";
+
+  const initials =
+    user
+      ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "U"
+      : "U";
+  const displayName =
+    user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email : "";
+  const roleLabel =
+    user?.roleDisplay ??
+    (user?.role === "admin"
+      ? lang === "ta"
+        ? "நிர்வாகி"
+        : "Administrator"
+      : user?.role ?? "");
+
   return (
     <aside
       className={cn("flex h-full flex-col transition-all duration-200", collapsed ? "w-14" : "w-56")}
@@ -54,7 +72,7 @@ export function Sidebar({
 
       {/* Nav */}
       <nav aria-label="Main navigation" className="flex-1 overflow-y-auto py-2">
-        {navItems.map(({ id, label, labelTa, Icon, badge }) => {
+        {visibleItems.map(({ id, label, labelTa, Icon, badge }) => {
           const isActive = active === id;
           return (
             <button
@@ -84,15 +102,17 @@ export function Sidebar({
 
         <div className="mx-3 my-2 border-t" style={{ borderColor: "var(--sidebar-border)" }} />
 
-        <button
-          onClick={() => onNav("admin")}
-          aria-current={active === "admin" ? "page" : undefined}
-          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] transition-colors hover:bg-white/[0.07] hover:text-white active:scale-[0.99]"
-          style={{ color: active === "admin" ? "#f5ab2e" : "var(--sidebar-foreground)" }}
-        >
-          <Settings size={16} className="flex-shrink-0" aria-hidden="true" />
-          {!collapsed && <span className="truncate">{lang === "ta" ? "நிர்வாகம்" : "Admin"}</span>}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => onNav("admin")}
+            aria-current={active === "admin" ? "page" : undefined}
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] transition-colors hover:bg-white/[0.07] hover:text-white active:scale-[0.99]"
+            style={{ color: active === "admin" ? "#f5ab2e" : "var(--sidebar-foreground)" }}
+          >
+            <Settings size={16} className="flex-shrink-0" aria-hidden="true" />
+            {!collapsed && <span className="truncate">{lang === "ta" ? "நிர்வாகம்" : "Admin"}</span>}
+          </button>
+        )}
         <button
           onClick={() => onNav("profile")}
           aria-current={active === "profile" ? "page" : undefined}
@@ -104,17 +124,17 @@ export function Sidebar({
         </button>
       </nav>
 
-      {/* Footer user */}
+      {/* Footer user — real auth user */}
       {!collapsed && (
         <div className="border-t px-3 py-3" style={{ borderColor: "var(--sidebar-border)" }}>
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-zinc-900">
-              {currentUser.initial}
+              {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium text-white">{currentUser.name}</div>
+              <div className="truncate text-xs font-medium text-white">{displayName}</div>
               <div className="truncate text-[10px]" style={{ color: "var(--sidebar-foreground)" }}>
-                {lang === "ta" ? currentUser.roleTa : currentUser.roleEn}
+                {roleLabel}
               </div>
             </div>
           </div>
